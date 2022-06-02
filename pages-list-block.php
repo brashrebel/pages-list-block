@@ -29,7 +29,8 @@ function plb_replace_email_body_text( $emailBody, $subscriber ) {
 	if ( ! empty( $listing_ids ) ) {
 		foreach ( $listing_ids as $listing ) {
 			$post = get_post( $listing );
-			$list_display .= "<h2>" . $post->post_title . "</h2>";
+			$list_display .= "<h1>" . $post->post_title . "</h1>";
+			// Manually building an array of the taxonomies we want with nice looking titles
 			$taxonomies = array(
 				'Cities' => 'cities',
 				'Regions' => 'regions',
@@ -38,12 +39,13 @@ function plb_replace_email_body_text( $emailBody, $subscriber ) {
 				'Wedding Categories' => 'wedding_category',
 				'Camping Categories' => 'camping_category',
 			);
+			// Loop over that list of taxonomies and display each title
 			foreach ( $taxonomies as $title => $name ) {
 
-				$list_display .= '<h3>' . $title . '</h3>';
+				$list_display .= '<h2>' . $title . '</h2>';
 
 				$pages = wp_get_post_terms( $listing, $name );
-
+				// Create an unordered list of the terms in each taxonomy
 				if ( ! empty( $pages ) ) {
 					$list_display .= '<ul>';
 					foreach ( $pages as $page ) {
@@ -65,7 +67,6 @@ function plb_replace_email_body_text( $emailBody, $subscriber ) {
 	$contents = str_replace( $find, $list_display, $emailBody );
 	return $contents;
 }
-//add_filter( 'fluentcrm_email_body_text', 'plb_replace_email_body_text', 10, 2 );
 add_filter( 'fluentcrm_parse_campaign_email_text', 'plb_replace_email_body_text', 10, 2 );
 
 function plb_add_smartcode_to_list( $codes ) {
