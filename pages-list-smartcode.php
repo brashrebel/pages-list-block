@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:     Pages List Block
+ * Plugin Name:     Pages List Smartcode
  * Description:     Custom plugin to add lists of pages listings are featured on to FluentCRM email campaigns.
  * Version:         0.1
  * Author:          Kyle Maurer
@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-function plb_smartcode_string() {
+function pls_smartcode_string() {
 	return '{{vm.pages_list}}';
 }
 
-function plb_replace_email_body_text( $emailBody, $subscriber ) {
+function pls_replace_email_body_text( $emailBody, $subscriber ) {
 
 	// Get this subscriber's listing IDs from the custom field
 	$listing_ids_field = fluentcrm_get_subscriber_meta( $subscriber->id, 'listing_ids', '' );
@@ -62,15 +62,15 @@ function plb_replace_email_body_text( $emailBody, $subscriber ) {
 	}
 
 	// This is the smartcode string which, if found in the email body, will be replaced with our output
-	$find = plb_smartcode_string();
+	$find = pls_smartcode_string();
 	// Here we are replacing the smartcode string with our output
 	$contents = str_replace( $find, $list_display, $emailBody );
 	return $contents;
 }
-add_filter( 'fluentcrm_parse_campaign_email_text', 'plb_replace_email_body_text', 10, 2 );
+add_filter( 'fluentcrm_parse_campaign_email_text', 'pls_replace_email_body_text', 10, 2 );
 
-function plb_add_smartcode_to_list( $codes ) {
-	$codes[plb_smartcode_string()] = 'Pages List';
+function pls_add_smartcode_to_list( $codes ) {
+	$codes[pls_smartcode_string()] = 'Pages List';
 	return $codes;
 }
-add_filter( 'fluentcrm_general_smartcodes', 'plb_add_smartcode_to_list', 10, 1 );
+add_filter( 'fluentcrm_general_smartcodes', 'pls_add_smartcode_to_list', 10, 1 );
