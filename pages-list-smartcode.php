@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name:     Pages List Smartcode
- * Description:     Custom plugin to add lists of pages listings are featured on to FluentCRM email campaigns.
- * Version:         0.1
+ * Description:     Custom plugin to add lists of pages which listings are featured on to FluentCRM email campaigns.
+ * Version:         0.2
  * Author:          Kyle Maurer
  * Author URI:      https://kyleblog.net
  * Text Domain:     pages-list-block
@@ -13,11 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-function pls_smartcode_string() {
-	return '{{vm.pages_list}}';
-}
-
-function pls_replace_email_body_text( $emailBody, $subscriber ) {
+/**
+ * Output for pages list smartcode
+ */
+function pls_list_pages( $subscriber ) {
 
 	// Get this subscriber's listing IDs from the custom field
 	$listing_ids_field = fluentcrm_get_subscriber_meta( $subscriber->id, 'listing_ids', '' );
@@ -42,35 +41,40 @@ function pls_replace_email_body_text( $emailBody, $subscriber ) {
 			// Loop over that list of taxonomies and display each title
 			foreach ( $taxonomies as $title => $name ) {
 
-				$list_display .= '<h2>' . $title . '</h2>';
-
 				$pages = wp_get_post_terms( $listing, $name );
 				// Create an unordered list of the terms in each taxonomy
 				if ( ! empty( $pages ) ) {
+					$list_display .= '<h2>' . $title . '</h2>';
 					$list_display .= '<ul>';
 					foreach ( $pages as $page ) {
 						$list_display .= '<li>' . $page->name . '</li>';
 					}
 					$list_display .= '</ul>';
-				} else {
-					$list_display .= 'This listing is not featured on any of these pages.';
 				}
 			}
 		}
 	} else {
 		$list_display = "You currently have no listings on VisitMaine.net.";
 	}
-
-	// This is the smartcode string which, if found in the email body, will be replaced with our output
-	$find = pls_smartcode_string();
-	// Here we are replacing the smartcode string with our output
-	$contents = str_replace( $find, $list_display, $emailBody );
-	return $contents;
+	return $list_display;
 }
-add_filter( 'fluentcrm_parse_campaign_email_text', 'pls_replace_email_body_text', 10, 2 );
 
-function pls_add_smartcode_to_list( $codes ) {
-	$codes[pls_smartcode_string()] = 'Pages List';
-	return $codes;
-}
-add_filter( 'fluentcrm_general_smartcodes', 'pls_add_smartcode_to_list', 10, 1 );
+/**
+ * Register smartcode
+ * https://developers.fluentcrm.com/modules/smart-code/
+ */
+add_action('fluentcrm_loaded', function () {
+    $key = 'visit_maine';
+    $title = 'Visit Maine';
+    $shortCodes = [
+        'pages_list' => 'List Customer Pages',
+    ];
+    $callback = function ($code, $valueKey, $defaultValue, $subscriber) {
+        if ($valueKey == 'pages_list') {
+            return pls_list_pages( $subscriber );
+        }
+        return $defaultValue; // default value works in case of invalid value key
+    };
+
+    FluentCrmApi('extender')->addSmartCode($key, $title, $shortCodes, $callback);
+});
